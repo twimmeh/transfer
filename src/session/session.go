@@ -56,7 +56,7 @@ func (l *loopbackService) OpenConnection(id int) Connection {
 		panic("Service ID not found")
 	}
 	conn1, conn2 := net.Pipe()
-	s.HandleConnection(l, conn1)
+	go s.HandleConnection(l, conn1)
 	return conn2
 }
 
