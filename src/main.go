@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"session"
 )
 
 func main() {
-	fmt.Println(session.GetTestString())
+	flag.Parse()
+	session.SetupSession()
 }

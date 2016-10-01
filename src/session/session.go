@@ -1,11 +1,18 @@
 package session
 
 import (
+	"errors"
 	"io"
 	"net"
 )
 
 var m = make(map[int]Service)
+
+var session Session
+
+func init() {
+	session = nil
+}
 
 // Session represents an active pairing of two Transfer instances, and allows
 // clients (in one instance) to open a connection to services in the other.
@@ -30,7 +37,10 @@ type Service interface {
 // GetSession returns the current session, or an error if one is not available.
 // For initial testing purposes, GetSession just returns a loopback service.
 func GetSession() (Session, error) {
-	return &loopbackService{}, nil
+	if session == nil {
+		return nil, errors.New("Session not available yet")
+	}
+	return session, nil
 }
 
 //
