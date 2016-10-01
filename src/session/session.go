@@ -5,7 +5,7 @@ import (
 	"net"
 )
 
-var m map[int]Service
+var m = make(map[int]Service)
 
 // Session represents an active pairing of two Transfer instances, and allows
 // clients (in one instance) to open a connection to services in the other.
