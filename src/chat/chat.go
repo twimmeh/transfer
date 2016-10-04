@@ -1,16 +1,19 @@
 package chat
 
 import (
-	"session"
+	"bufio"
 	"fmt"
-	"io/ioutil"
 	"io"
+	"io/ioutil"
+	"os"
+	"session"
+	"strings"
 )
 
 const chatServiceId = 1
 
 //Register chat service
-func init(){
+func init() {
 	chatService := ChatService{}
 	session.RegisterService(chatServiceId, chatService)
 }
@@ -18,21 +21,35 @@ func init(){
 type ChatService struct{}
 
 // Simple read and dump to command line
-func (svc ChatService)HandleConnection(session session.Session, conn session.Connection){
+func (svc ChatService) HandleConnection(session session.Session, conn session.Connection) {
 
-	b,_ := ioutil.ReadAll(conn)
+	b, _ := ioutil.ReadAll(conn)
 	fmt.Println(string(b[:]))
 }
 
+// Poll console for messages to send
+func SendChatMessageLoop() {
+	for {
+		sendMessage(getChatMessage())
+	}
+}
+
 // If a session is available, try to send a message to it
-func SendMessage(message string){
-	
-	s,_ := session.GetSession()
-	if(s != nil){
+func sendMessage(message string) {
+
+	s, _ := session.GetSession()
+	if s != nil {
 		conn := s.OpenConnection(chatServiceId)
-		io.WriteString(conn,message)
+		io.WriteString(conn, message)
 		conn.Close()
-	}else{
+	} else {
 		fmt.Println("No chat sessions available")
 	}
+}
+
+// Helper function to retreive text message from console
+func getChatMessage() string {
+	reader := bufio.NewReader(os.Stdin)
+	text, _ := reader.ReadString('\n')
+	return strings.TrimSpace(text)
 }
