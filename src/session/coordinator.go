@@ -16,6 +16,7 @@ var version = uint32(0x000100) //v00.01.00
 func SetupSession() {
 	if *server == "" {
 		// Start listening
+		fmt.Println("Waiting for connection...")
 		ln, err := net.Listen("tcp", ":6543")
 		if err != nil {
 			fmt.Printf("Failed to connect: %s\r\n", err.Error())
@@ -34,6 +35,7 @@ func SetupSession() {
 
 	} else {
 		// Try connecting
+		fmt.Printf("Connecting to %s...\r\n", *server)
 		for {
 			conn, err := net.Dial("tcp", *server)
 			if err != nil {
