@@ -26,3 +26,5 @@ transfer
 *.exe
 *.test
 *.prof
+
+config.ini
