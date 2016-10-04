@@ -73,5 +73,5 @@ func (l *loopbackService) OpenConnection(id int) Connection {
 // For initial go environment testing.
 // TODO: Delete this.
 func GetTestString() string {
-	return "It wroks!"
+	return "It works!"
 }
