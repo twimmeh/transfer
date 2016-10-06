@@ -67,7 +67,7 @@ func sendMessage(message string) {
 func SetupWebService() {
 
 	if _, err := strconv.Atoi(*chatPort); err != nil {
-		panic("Invalid chat port specified (must be 32-bit integer. You put: " + *chatPort)
+		panic("Invalid chat port specified (must be 32-bit integer). You put: " + *chatPort)
 	}
 
 	http.HandleFunc(chatResource, chatHandler)
