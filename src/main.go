@@ -12,7 +12,7 @@ func main() {
 	flag.Parse()
 	config.Parse()
 
-	//kick off chat loop
-	go chat.SendChatMessageLoop()
+	//kick off chat service
+	go chat.SetupWebService()
 	session.SetupSession()
 }
