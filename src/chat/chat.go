@@ -11,7 +11,6 @@ import (
 )
 
 const chatServiceId = 1
-const chatResource = "/chat"
 
 var receivedChatMessages = ""
 var chatPort = flag.String("chatport", "8080", "The HTTP port of the chat service. Default: 8080")
@@ -47,7 +46,7 @@ type ChatService struct{}
 func (svc ChatService) HandleConnection(session session.Session, conn session.Connection) {
 
 	b, _ := ioutil.ReadAll(conn)
-	receivedChatMessages = receivedChatMessages + "\n" + string(b[:])
+	receivedChatMessages = receivedChatMessages + "<br>" + string(b[:])
 }
 
 // If a session is available, try to send a message to it
@@ -64,14 +63,14 @@ func sendMessage(message string) {
 }
 
 // Web-based chat message sending
-func SetupWebService() {
+func SetupWebService() (string) {
 
 	if _, err := strconv.Atoi(*chatPort); err != nil {
 		panic("Invalid chat port specified (must be 32-bit integer). You put: " + *chatPort)
 	}
 
-	http.HandleFunc(chatResource, chatHandler)
-	http.ListenAndServe(":"+*chatPort, nil)
+	http.HandleFunc("/chat", chatHandler)
+	return *chatPort
 }
 
 func chatHandler(w http.ResponseWriter, r *http.Request) {

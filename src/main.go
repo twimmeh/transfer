@@ -5,6 +5,7 @@ import (
 	"config"
 	"flag"
 	"session"
+	"net/http"
 )
 
 func main() {
@@ -13,6 +14,7 @@ func main() {
 	config.Parse()
 
 	//kick off chat service
-	go chat.SetupWebService()
+	chatPort := chat.SetupWebService()
+	go http.ListenAndServe(":"+chatPort, nil)
 	session.SetupSession()
 }
