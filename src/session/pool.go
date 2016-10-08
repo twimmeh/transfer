@@ -6,18 +6,24 @@ import (
 )
 
 type poolSession struct {
-	conns    chan clientConnection
-	pool     chan clientConnection
-	requests chan uint8
-	intake   chan net.Conn
-	pending  chan uint8
+	conns       chan clientConnection
+	pool        chan clientConnection
+	requests    chan uint8
+	intake      chan net.Conn
+	pending     chan uint8
+	sessionInfo SessionInfo
 }
 
-func newPoolSession() *poolSession {
-	p := &poolSession{make(chan clientConnection), make(chan clientConnection, 3), make(chan uint8, 1), make(chan net.Conn, 1), make(chan uint8, 3)}
+func newPoolSession(conn net.Conn) *poolSession {
+	p := &poolSession{
+		conns:       make(chan clientConnection),
+		pool:        make(chan clientConnection, 3),
+		requests:    make(chan uint8, 1),
+		intake:      make(chan net.Conn, 1),
+		pending:     make(chan uint8, 3),
+		sessionInfo: exchangeSessionInfo(conn)}
 
 	go func() {
-
 		for {
 			shortfall := 3 - (len(p.pool) + len(p.pending))
 			if shortfall > 0 {
@@ -41,7 +47,7 @@ func newPoolSession() *poolSession {
 	return p
 }
 
-func (s poolSession) OpenConnection(id int) Connection {
+func (s *poolSession) OpenConnection(id int) Connection {
 	if id <= 0 || id > 255 {
 		panic("Invalid ID")
 	}
@@ -92,4 +98,8 @@ func createClientConnection(conn net.Conn) clientConnection {
 func (c *clientConnection) connectService(id uint8) net.Conn {
 	c.id <- id
 	return <-c.preparedConn
+}
+
+func (s *poolSession) GetInfo() SessionInfo {
+	return s.sessionInfo
 }

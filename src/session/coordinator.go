@@ -11,7 +11,7 @@ import (
 
 var server = flag.String("server", "", "The remote server to connect to. If left blank, will listen for connections instead.")
 
-var version = uint32(0x000100) //v00.01.00
+var version = uint32(0x000101) //v00.01.01
 
 func SetupSession() {
 	if *server == "" {
@@ -51,7 +51,7 @@ func SetupSession() {
 }
 
 func setupSlaveSession(conn net.Conn, ln net.Listener) {
-	pool := newPoolSession()
+	pool := newPoolSession(conn)
 	session = pool
 
 	go func() {
@@ -71,7 +71,7 @@ func setupSlaveSession(conn net.Conn, ln net.Listener) {
 		}
 	}()
 
-	fmt.Println("Connection successful!")
+	fmt.Printf("Connection to %s successful!\r\n", session.GetInfo().RemoteName)
 
 	for {
 		pconn, err := ln.Accept()
@@ -97,14 +97,13 @@ func setupSlaveSession(conn net.Conn, ln net.Listener) {
 		default:
 			panic("Impossible")
 		}
-
 	}
 }
 
 func setupMasterSession(conn net.Conn) {
 	var slaveReq, quit chan uint8
 	slaveReq = make(chan uint8)
-	pool := newPoolSession()
+	pool := newPoolSession(conn)
 	session = pool
 
 	go func() {
@@ -121,7 +120,7 @@ func setupMasterSession(conn net.Conn) {
 		}
 	}()
 
-	fmt.Println("Connection successful!")
+	fmt.Printf("Connection to %s successful!\r\n", session.GetInfo().RemoteName)
 
 outer:
 	for {

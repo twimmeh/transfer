@@ -22,7 +22,6 @@ type ChatService struct{}
 
 // Simple read and dump to command line
 func (svc ChatService) HandleConnection(session session.Session, conn session.Connection) {
-
 	b, _ := ioutil.ReadAll(conn)
 	fmt.Println(string(b[:]))
 }
@@ -36,7 +35,6 @@ func SendChatMessageLoop() {
 
 // If a session is available, try to send a message to it
 func sendMessage(message string) {
-
 	s, _ := session.GetSession()
 	if s != nil {
 		conn := s.OpenConnection(chatServiceId)
