@@ -3,7 +3,6 @@ package session
 import (
 	"errors"
 	"io"
-	"net"
 )
 
 var m = make(map[int]Service)
@@ -14,10 +13,13 @@ func init() {
 	session = nil
 }
 
-// Session represents an active pairing of two Transfer instances, and allows
-// clients (in one instance) to open a connection to services in the other.
+// Session represents an active pairing of two Transfer instances.
 type Session interface {
+	// Make a connection to a service to the other Transfer instance.
 	OpenConnection(id int) Connection
+
+	// Returns a copy of the SessionInfo object describing useful info about this session.
+	GetInfo() SessionInfo
 }
 
 // Connection wraps a TCP connection between a client and service.
@@ -35,7 +37,6 @@ type Service interface {
 }
 
 // GetSession returns the current session, or an error if one is not available.
-// For initial testing purposes, GetSession just returns a loopback service.
 func GetSession() (Session, error) {
 	if session == nil {
 		return nil, errors.New("Session not available yet")
@@ -43,7 +44,6 @@ func GetSession() (Session, error) {
 	return session, nil
 }
 
-//
 // Every service should create an implementation of Service, and register it
 // using RegisterService.
 func RegisterService(id int, service Service) {
@@ -51,27 +51,4 @@ func RegisterService(id int, service Service) {
 		panic("Invalid ID")
 	}
 	m[id] = service
-}
-
-// Loopback service for initial testing.
-// TODO: Delete this.
-type loopbackService struct{}
-
-func (l *loopbackService) OpenConnection(id int) Connection {
-	if id < 0 || id > 255 {
-		panic("Invalid ID")
-	}
-	s, ok := m[id]
-	if !ok {
-		panic("Service ID not found")
-	}
-	conn1, conn2 := net.Pipe()
-	go s.HandleConnection(l, conn1)
-	return conn2
-}
-
-// For initial go environment testing.
-// TODO: Delete this.
-func GetTestString() string {
-	return "It works!"
 }
