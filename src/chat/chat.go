@@ -17,19 +17,44 @@ var chatPort = flag.String("chatport", "8080", "The HTTP port of the chat servic
 
 const chatPage = `<!DOCTYPE html>
 <html>
+<head>
+<title>Chatz</title>
+  <style>
+    textarea {
+        resize: none;
+    }
+  </style>
+</head>
 <body>
-<form>
-  Chat message:<br>
-  <input type="text" name="chatMessageInput">
-  <br>
-</form>
-<div>
-	<p>
-		Other persons text to go here:
-		<br>		
-		%s
-	</p>
-</div>
+<!-- Start your code here -->
+  <div>
+   <textarea id="inputText" rows="4" cols="50" autofocus="true"></textarea>
+  </div>
+  <div>
+<button onclick="writeToWindow();" type="button" id="sendButton">Send</button>
+  </div>
+  <div>
+  <textarea rows="4" cols="50" readonly="true" id="outputText"></textarea>
+  </div>
+  
+  <script>
+function writeToWindow(){
+      var inputText = document.getElementById("inputText");
+      var outputText = document.getElementById("outputText");
+      var msg = inputText.value;
+      inputText.value = null;
+      
+      if(outputText.value === "") {
+        outputText.value = msg;
+      } else {
+        outputText.value += "\n"+msg;
+      }
+      //update cursor on outputText
+      outputText.focus();
+      //put focus back on input box
+      inputText.focus();
+    }
+  </script>
 </body>
 </html>
 `
@@ -78,7 +103,8 @@ func chatHandler(w http.ResponseWriter, r *http.Request) {
 	message := r.URL.Query().Get("chatMessageInput")
 
 	if message == "" {
-		fmt.Fprintf(w, chatPage, receivedChatMessages)
+		//fmt.Fprintf(w, chatPage, receivedChatMessages)
+		fmt.Fprintf(w, chatPage)
 	} else {
 		sendMessage(message)
 		http.Redirect(w, r, "/chat", 301)
