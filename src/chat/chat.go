@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"session"
 	"strconv"
+	"strings"
 )
 
 const chatServiceId = 1
@@ -31,29 +32,24 @@ const chatPage = `<!DOCTYPE html>
    <textarea id="inputText" rows="4" cols="50" autofocus="true"></textarea>
   </div>
   <div>
-<button onclick="writeToWindow();" type="button" id="sendButton">Send</button>
+<button onclick="writeMessage();" type="button" id="sendButton">Send</button>
   </div>
   <div>
   <textarea rows="4" cols="50" readonly="true" id="outputText"></textarea>
   </div>
   
   <script>
-function writeToWindow(){
-      var inputText = document.getElementById("inputText");
-      var outputText = document.getElementById("outputText");
-      var msg = inputText.value;
-      inputText.value = null;
-      
-      if(outputText.value === "") {
-        outputText.value = msg;
-      } else {
-        outputText.value += "\n"+msg;
-      }
-      //update cursor on outputText
-      outputText.focus();
-      //put focus back on input box
-      inputText.focus();
-    }
+
+function writeMessage(){
+	var inputText = document.getElementById("inputText");
+
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", "/chat/send", true);
+	xhr.setRequestHeader("Content-Type", "text/plain; charset=UTF-8");
+	xhr.send(inputText.value);
+
+	inputText.value = "";
+	};
   </script>
 </body>
 </html>
@@ -67,10 +63,11 @@ func init() {
 
 type ChatService struct{}
 
-// Simple read and dump to command line
 func (svc ChatService) HandleConnection(session session.Session, conn session.Connection) {
+
+	// Dump to console (for now)
 	b, _ := ioutil.ReadAll(conn)
-	receivedChatMessages = receivedChatMessages + "<br>" + string(b[:])
+	fmt.Println(string(b[:]))
 }
 
 // If a session is available, try to send a message to it
@@ -80,33 +77,57 @@ func sendMessage(message string) {
 		conn := s.OpenConnection(chatServiceId)
 		io.WriteString(conn, message)
 		conn.Close()
+		fmt.Println("Message sent!")
 	} else {
 		fmt.Println("No chat sessions available")
 	}
 }
 
 // Web-based chat message sending
-func SetupWebService() (string) {
+func SetupWebService() string {
 
 	if _, err := strconv.Atoi(*chatPort); err != nil {
 		panic("Invalid chat port specified (must be 32-bit integer). You put: " + *chatPort)
 	}
 
-	http.HandleFunc("/chat", chatHandler)
+	http.HandleFunc("/chat", chatHandler)      // Main chat page
+	http.HandleFunc("/chat/send", sendHandler) // Endpoint for sending messages
+	http.HandleFunc("/chat/read", readHandler) // Endpoint for receiving messages (not yet implemented)
 	return *chatPort
 }
 
+// Serve the chat page
 func chatHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, chatPage)
+}
 
-	// Message lives in query string.
-	// Pass it through if exists otherwise serve the page
-	message := r.URL.Query().Get("chatMessageInput")
+// Parse request for chat message and send to connected client
+func sendHandler(w http.ResponseWriter, r *http.Request) {
 
-	if message == "" {
-		//fmt.Fprintf(w, chatPage, receivedChatMessages)
-		fmt.Fprintf(w, chatPage)
-	} else {
-		sendMessage(message)
-		http.Redirect(w, r, "/chat", 301)
+	switch r.Method {
+
+	case http.MethodPost:
+		contentType := r.Header.Get("Content-Type")
+
+		if strings.HasPrefix(contentType, "text/plain") {
+
+			//todo: handle edge cases more gracefully, e.g. no remote client connected.
+			b, _ := ioutil.ReadAll(r.Body)
+			fmt.Println("Trying to send message: " + string(b[:]))
+			sendMessage(string(b[:]))
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, "Content-Type must be text/plain")
+		}
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintf(w, "You must POST chat messages.")
 	}
+}
+
+func readHandler(w http.ResponseWriter, r *http.Request) {
+
+	// todo!
+
 }
